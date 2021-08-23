@@ -27,13 +27,13 @@ var server = http.createServer(function (request, response) {
     if (path === "/sign_in" && method === "POST") {
         const userArray = JSON.parse(fs.readFileSync("./db/users.json"));
         const array = [];
-        request.on("data", (chunk) => {
+        request.on("data", (chunk) => {    // 上传请求的数据 chunk
             array.push(chunk);
         });
-        request.on("end", () => {
-            const string = Buffer.concat(array).toString();
-            const obj = JSON.parse(string); // name password
-            const user = userArray.find((user) => user.name === obj.name && user.password === obj.password);
+        request.on("end", () => {    // 如果请求的数据传递结束，就执行下面的代码
+            const string = Buffer.concat(array).toString();        // Buffer 把不同数据合成一个字符串
+            const obj = JSON.parse(string);      // obj 获取到对象的 name password
+            const user = userArray.find((user) => user.name === obj.name && user.password === obj.password);  
             if (user === undefined) {
                 response.statusCode = 400;
                 response.setHeader("Content-Type", "text/json; charset=utf-8");
@@ -42,12 +42,11 @@ var server = http.createServer(function (request, response) {
                 const random = Math.random();
                 session[random] = { user_id: user.id };
                 fs.writeFileSync("./session.json", JSON.stringify(session));
-                response.setHeader("Set-Cookie", `session_id=${random}; HttpOnly`);
+                response.setHeader("Set-Cookie", `session_id=${random}; HttpOnly`);   // HttpOnly 防止前端修改 cookie
             }
             response.end();
         });
     } else if (path === "/home.html") {
-        // 写不出来
         const cookie = request.headers["cookie"];
         let sessionId;
         try {
@@ -60,7 +59,7 @@ var server = http.createServer(function (request, response) {
             const userId = session[sessionId].user_id;
             const userArray = JSON.parse(fs.readFileSync("./db/users.json"));
             const user = userArray.find((user) => user.id === userId);
-            const homeHtml = fs.readFileSync("./public/home.html").toString();
+            const homeHtml = fs.readFileSync("./public/home.html").toString();    // 读文件之后最好不要忘记 toString
             let string = "";
             if (user) {
                 string = homeHtml.replace("{{loginStatus}}", "已登录").replace("{{user.name}}", user.name);
